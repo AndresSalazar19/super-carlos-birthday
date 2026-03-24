@@ -43,27 +43,26 @@ export default function IntroSlideshow({ onComplete }: Props) {
   const [slide, setSlide] = useState(0)
   const [textIndex, setTextIndex] = useState(0)
   const [textDone, setTextDone] = useState(false)
-  const [visible, setVisible] = useState(false)
-  // `transitioning` ahora controla la opacidad del CONTENIDO, no de toda la pantalla
+  
+  // 👇 1. CAMBIO: Cambia useState(false) por useState(true)
+  const [visible, setVisible] = useState(true) 
+  
   const [transitioning, setTransitioning] = useState(false)
   const typeRef = useRef<ReturnType<typeof setInterval> | null>(null)
   
-  // Ref para controlar la imagen y aplicarle estilos dinámicos directamente
   const imageRef = useRef<HTMLImageElement>(null)
 
   const currentSlide = SLIDES[slide]
   const currentText = currentSlide.text
 
-  // 1. CARACTERÍSTICA: Bloqueo de Scroll al montar/desmontar
+  // Bloqueo de Scroll al montar/desmontar
   useEffect(() => {
-    // Al montar: Desactivar scroll
     const originalStyle = window.getComputedStyle(document.body).overflow;
     document.body.style.overflow = 'hidden';
 
-    // Aparecer suavemente
-    setTimeout(() => setVisible(true), 100)
+    // 👇 2. CAMBIO: Borra la línea del setTimeout. 
+    // Ya no necesitamos esperar para hacerlo visible.
 
-    // Al desmontar: Restaurar scroll original
     return () => {
       document.body.style.overflow = originalStyle;
     };

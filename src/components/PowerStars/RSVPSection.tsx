@@ -101,7 +101,10 @@ function RSVPForm() {
   const [name, setName] = useState('')
   const [swimsuit, setSwimsuit] = useState(false)
   const [loading, setLoading] = useState(false)
+  
+  // Mantenemos 'done' para el mensaje original, y agregamos 'showCelebration' para el póster
   const [done, setDone] = useState(false)
+  const [showCelebration, setShowCelebration] = useState(false)
   const [error, setError] = useState('')
 
   const inputStyle: React.CSSProperties = {
@@ -117,20 +120,85 @@ function RSVPForm() {
     try {
       const { error: err } = await supabase.from('rsvps').insert({ name: name.trim(), bringing_swimsuit: swimsuit })
       if (err) throw err
-      sounds.rsvpSuccess(); setDone(true)
-    } catch { setError('Error al guardar. Intenta de nuevo.'); sounds.menuBack() }
+      
+      // ¡ÉXITO! Activamos la celebración
+      setDone(true)
+      setShowCelebration(true)
+      
+      // Reproducir win.mp3
+      const winSound = new Audio('/sounds/win.mp3')
+      winSound.volume = 0.8
+      winSound.play().catch(e => console.log('Error reproduciendo win.mp3:', e))
+
+    } catch { 
+      setError('Error al guardar. Intenta de nuevo.'); 
+      sounds.menuBack() 
+    }
     finally { setLoading(false) }
   }
 
   if (done) return (
-    <div className="dialog-box p-6 text-center" style={{ animation: 'dialogAppear 0.3s ease-out' }}>
-      <div style={{ fontFamily:"'Press Start 2P', cursive", fontSize:'clamp(14px,3.5vw,22px)', color:'#22c55e', textShadow:'0 0 20px rgba(34,197,94,0.8)', animation:'floatAnimation 1s ease-in-out infinite', marginBottom:'10px' }}>
-        ★ CONFIRMADO ★
+    <>
+      <div className="dialog-box p-6 text-center" style={{ animation: 'dialogAppear 0.3s ease-out' }}>
+        <div style={{ fontFamily:"'Press Start 2P', cursive", fontSize:'clamp(14px,3.5vw,22px)', color:'#22c55e', textShadow:'0 0 20px rgba(34,197,94,0.8)', animation:'floatAnimation 1s ease-in-out infinite', marginBottom:'10px' }}>
+          ★ CONFIRMADO ★
+        </div>
+        <p style={{ fontFamily:"'Press Start 2P', cursive", fontSize:'10px', color:'#1a1a2e', lineHeight:2 }}>
+          ¡{name} se une a la<br/>galaxia de Carlos! 🎉
+        </p>
       </div>
-      <p style={{ fontFamily:"'Press Start 2P', cursive", fontSize:'10px', color:'#1a1a2e', lineHeight:2 }}>
-        ¡{name} se une a la<br/>galaxia de Carlos! 🎉
-      </p>
-    </div>
+
+      {/* --- OVERLAY DE CELEBRACIÓN CON EL PÓSTER --- */}
+      {showCelebration && (
+        <div 
+          className="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-black/80 backdrop-blur-sm"
+          style={{ animation: 'fadeInPoster 0.5s ease-out forwards' }}
+          onClick={() => setShowCelebration(false)} 
+        >
+          <div 
+            className="relative flex flex-col items-center"
+            style={{ animation: 'starPop 1s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards' }}
+            onClick={(e) => e.stopPropagation()} 
+          >
+            <div className="absolute inset-0 bg-yellow-400 blur-[80px] opacity-40 rounded-full animate-pulse" />
+
+            <img
+              src="/images/poster.png"
+              alt="¡Invitación Desbloqueada!"
+              className="relative z-10 w-[85vw] max-w-md border-4 border-[#facc15] rounded-xl shadow-[0_0_30px_rgba(250,204,21,0.8)]"
+            />
+
+            <h3 
+              className="relative z-10 mt-6 text-center"
+              style={{ fontFamily: "'Press Start 2P', cursive", color: '#facc15', fontSize: 'clamp(12px, 4vw, 18px)', textShadow: '4px 4px 0 #000' }}
+            >
+              ¡Invitación Desbloqueada!
+            </h3>
+
+            <button 
+              onClick={() => setShowCelebration(false)}
+              className="relative z-10 mt-8 px-6 py-3 bg-[#e52521] text-white rounded-full hover:scale-110 transition-transform shadow-[0_4px_0_#991b1b]"
+              style={{ fontFamily: "'Press Start 2P', cursive", fontSize: '10px' }}
+            >
+              CERRAR
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Estilos para el póster */}
+      <style>{`
+        @keyframes fadeInPoster {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes starPop {
+          0% { transform: scale(0.2) rotate(-15deg); opacity: 0; }
+          60% { transform: scale(1.1) rotate(5deg); opacity: 1; }
+          100% { transform: scale(1) rotate(0deg); opacity: 1; }
+        }
+      `}</style>
+    </>
   )
 
   return (
@@ -167,6 +235,7 @@ function RSVPForm() {
 
 // ── Star counter strip ─────────────────────────────────────────────────────
 function StarCounter() {
+  // ... (Tu código de StarCounter no necesita cambios)
   const [count, setCount] = useState<number|null>(null)
   const [swimCount, setSwimCount] = useState(0)
 
@@ -215,6 +284,7 @@ function StarCounter() {
 
 // ── Main export ────────────────────────────────────────────────────────────
 export default function RSVPSection() {
+  // ... (Tu código principal de RSVPSection se mantiene igual)
   const [phase, setPhase] = useState<'intro'|'game'|'form'>('intro')
 
   return (

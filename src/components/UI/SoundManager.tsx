@@ -19,8 +19,7 @@ export default function SoundManager() {
   return (
     <button
       onClick={toggle}
-      className="fixed top-4 right-4 z-50 hud-box text-xs text-mario-yellow hover:scale-110 transition-transform"
-      style={{ fontSize: '10px', padding: '8px 12px' }}
+className="fixed top-4 right-24 z-50 hud-box text-xs text-mario-yellow hover:scale-110 transition-transform hidden md:flex"      style={{ fontSize: '10px', padding: '8px 12px' }}
       title={muted ? 'Activar sonidos' : 'Silenciar'}
     >
       {muted ? '🔇 MUTE' : '🔊 SFX'}

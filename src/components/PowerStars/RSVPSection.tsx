@@ -4,6 +4,7 @@ import { createPortal } from 'react-dom' // 👈 AÑADE ESTA LÍNEA
 import { supabase } from '@/lib/supabase'
 import { sounds } from '@/lib/sounds'
 import { EVENT } from '@/constants/event'
+import html2canvas from 'html2canvas' // 👈 NUEVA IMPORTACIÓN
 
 // ── Mini game ──────────────────────────────────────────────────────────────
 type StarObj = { id: number; x: number; y: number; vy: number; color: string; size: number; caught: boolean }
@@ -98,6 +99,7 @@ function MiniGame({ onDone }: { onDone: () => void }) {
 }
 
 // ── RSVP Form ──────────────────────────────────────────────────────────────
+// ── RSVP Form ──────────────────────────────────────────────────────────────
 function RSVPForm() {
   const [name, setName] = useState('')
   const [swimsuit, setSwimsuit] = useState(false)
@@ -106,6 +108,10 @@ function RSVPForm() {
   const [done, setDone] = useState(false)
   const [showCelebration, setShowCelebration] = useState(false)
   const [error, setError] = useState('')
+
+  // 👇 NUEVOS ESTADOS PARA COMPARTIR
+  const cardRef = useRef<HTMLDivElement>(null)
+  const [isSharing, setIsSharing] = useState(false)
 
   useEffect(() => {
     if (showCelebration) {
@@ -151,6 +157,52 @@ function RSVPForm() {
     window.dispatchEvent(new Event('victory-end'))
   }
 
+  // 👇 LA MAGIA PARA COMPARTIR EN WHATSAPP
+  const handleShare = async () => {
+    if (!cardRef.current) return;
+    setIsSharing(true);
+    sounds.menuSelect(); // Sonidito al presionar
+    
+    try {
+      // 1. Tomamos la "foto" del elemento
+      const canvas = await html2canvas(cardRef.current, {
+        backgroundColor: '#000820', // Fondo galáctico
+        scale: 2, // Alta calidad
+        useCORS: true, // Importante para las imágenes
+      });
+
+      // 2. Convertimos a archivo
+      canvas.toBlob(async (blob) => {
+        if (!blob) return;
+        const file = new File([blob], `Pase_VIP_${name.trim()}.png`, { type: 'image/png' });
+        
+        // 3. Preparamos el mensaje de WhatsApp
+        const shareData = {
+          title: '¡Voy al Super Carlos Birthday!',
+          text: `¡Ya tengo mi PASE VIP para el cumple de Carlos! 🍄✨\nConfirma tú también aquí: https://super-carlos-birthday.vercel.app/`,
+          files: [file]
+        };
+
+        // 4. Intentamos abrir el menú nativo del celular (Web Share API)
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          await navigator.share(shareData);
+        } else {
+          // 5. Fallback para PC: Descargamos la imagen automáticamente
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `Pase_VIP_${name.trim()}.png`;
+          a.click();
+          alert('¡Pase VIP descargado! 🎟️ Ahora puedes enviarlo por WhatsApp a tus amigos.');
+        }
+        setIsSharing(false);
+      });
+    } catch (err) {
+      console.error('Error al generar la imagen', err);
+      setIsSharing(false);
+    }
+  }
+
   if (done) return (
     <>
       <div className="dialog-box p-6 text-center" style={{ animation: 'dialogAppear 0.3s ease-out' }}>
@@ -162,25 +214,35 @@ function RSVPForm() {
         </p>
       </div>
 
-      {/* 👇 CAMBIO CLAVE: Envolvemos el modal en createPortal */}
       {showCelebration && createPortal(
         <div 
-          className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-black"
+          className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-black/90 backdrop-blur-sm"
           style={{ animation: 'fadeInPoster 0.8s ease-out forwards' }}
         >
-          <div className="absolute inset-0 opacity-30" style={{ background: 'radial-gradient(ellipse at center, transparent 0%, #000 100%), url("/images/slides/slide1.png") center/cover' }} />
+          <div className="absolute inset-0 opacity-40" style={{ background: 'radial-gradient(ellipse at center, transparent 0%, #000 100%), url("/images/slides/slide1.png") center/cover' }} />
 
           <div 
             className="relative flex flex-col items-center z-10 w-full px-4"
             style={{ animation: 'starPop 1s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards' }}
           >
-            <div className="absolute inset-0 bg-yellow-400 blur-[100px] opacity-30 rounded-full animate-pulse" />
-
-            <img
-              src="/images/poster.png"
-              alt="¡Invitación Desbloqueada!"
-              className="relative z-10 w-auto h-auto max-w-full max-h-[60vh] object-contain border-4 border-[#facc15] rounded-xl shadow-[0_0_40px_rgba(250,204,21,0.6)]"
-            />
+            {/* 👇 ESTA ES LA "TARJETA" QUE SE VA A CAPTURAR Y ENVIAR 👇 */}
+            <div 
+              ref={cardRef} 
+              className="relative flex flex-col items-center bg-[#000820] p-4 rounded-xl border-4 border-[#facc15] shadow-[0_0_40px_rgba(250,204,21,0.6)]"
+            >
+              <img
+                src="/images/poster.png"
+                alt="Póster"
+                className="relative z-10 w-auto h-auto max-w-full max-h-[50vh] object-contain rounded-lg border-2 border-[#1a1a2e]"
+              />
+              
+              {/* Etiqueta VIP personalizada con el nombre */}
+              <div className="mt-4 bg-[#1a1a2e] border-2 border-[#22c55e] px-4 py-3 rounded-lg w-full text-center shadow-[0_0_15px_rgba(34,197,94,0.4)]">
+                <p style={{ fontFamily: "'Press Start 2P', cursive", color: '#22c55e', fontSize: '10px', lineHeight: 1.5 }}>
+                  PASE VIP:<br/><span className="text-[#facc15] text-xs mt-2 inline-block">{name.toUpperCase()}</span>
+                </p>
+              </div>
+            </div>
 
             <h3 
               className="relative z-10 mt-6 text-center animate-pulse"
@@ -189,16 +251,28 @@ function RSVPForm() {
               ¡Invitación Desbloqueada!
             </h3>
 
-            <button 
-              onClick={handleCloseCelebration}
-              className="relative z-10 mt-6 px-8 py-4 bg-[#1a1a2e] text-[#facc15] border-2 border-[#facc15] rounded-full hover:scale-110 hover:bg-[#facc15] hover:text-[#1a1a2e] transition-all shadow-[0_4px_20px_rgba(250,204,21,0.3)]"
-              style={{ fontFamily: "'Press Start 2P', cursive", fontSize: '12px' }}
-            >
-              CONTINUAR
-            </button>
+            {/* 👇 BOTONES DE ACCIÓN (Estos no salen en la foto) 👇 */}
+            <div className="flex flex-wrap justify-center gap-4 mt-8">
+              <button 
+                onClick={handleShare}
+                disabled={isSharing}
+                className="relative z-10 px-6 py-4 bg-[#25D366] text-white border-2 border-[#128C7E] rounded-full hover:scale-110 transition-all shadow-[0_4px_20px_rgba(37,211,102,0.4)] flex items-center gap-2"
+                style={{ fontFamily: "'Press Start 2P', cursive", fontSize: '10px' }}
+              >
+                {isSharing ? 'GENERANDO...' : '📱 COMPARTIR'}
+              </button>
+
+              <button 
+                onClick={handleCloseCelebration}
+                className="relative z-10 px-6 py-4 bg-[#1a1a2e] text-[#facc15] border-2 border-[#facc15] rounded-full hover:scale-110 hover:bg-[#facc15] hover:text-[#1a1a2e] transition-all shadow-[0_4px_20px_rgba(250,204,21,0.3)]"
+                style={{ fontFamily: "'Press Start 2P', cursive", fontSize: '10px' }}
+              >
+                CERRAR
+              </button>
+            </div>
           </div>
         </div>,
-        document.body // 👈 Aquí le decimos que lo inyecte directamente en la raíz de la página
+        document.body
       )}
 
       <style>{`

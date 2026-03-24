@@ -179,7 +179,6 @@ function RSVPForm() {
         // 3. Preparamos el mensaje de WhatsApp
         const shareData = {
           title: '¡Voy al Super Carlos Birthday!',
-          text: `¡Ya tengo mi PASE VIP para el cumple de Carlos! 🍄✨\nConfirma tú también aquí: https://super-carlos-birthday.vercel.app/`,
           files: [file]
         };
 

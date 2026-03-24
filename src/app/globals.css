@@ -1,0 +1,166 @@
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --mario-yellow: #facc15;
+  --mario-red: #ef4444;
+  --mario-blue: #3b82f6;
+  --mario-green: #22c55e;
+  --space-dark: #030014;
+  --space-purple: #1a0a3e;
+}
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--space-dark);
+  overflow-x: hidden;
+  font-family: 'Press Start 2P', cursive;
+}
+
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: #0a0a2e; }
+::-webkit-scrollbar-thumb { background: var(--mario-yellow); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #f59e0b; }
+
+::selection { background: rgba(250,204,21,0.3); color: #fff; }
+
+.star-bg {
+  background-image:
+    radial-gradient(1px 1px at 10% 15%, rgba(255,255,255,0.8) 0%, transparent 100%),
+    radial-gradient(1px 1px at 25% 40%, rgba(255,255,255,0.6) 0%, transparent 100%),
+    radial-gradient(2px 2px at 50% 20%, rgba(255,255,255,0.9) 0%, transparent 100%),
+    radial-gradient(1px 1px at 70% 60%, rgba(255,255,255,0.7) 0%, transparent 100%),
+    radial-gradient(1px 1px at 85% 35%, rgba(255,255,255,0.8) 0%, transparent 100%),
+    radial-gradient(1px 1px at 15% 80%, rgba(255,255,255,0.5) 0%, transparent 100%),
+    radial-gradient(2px 2px at 90% 80%, rgba(255,255,255,0.7) 0%, transparent 100%),
+    radial-gradient(1px 1px at 40% 70%, rgba(255,255,255,0.6) 0%, transparent 100%);
+}
+
+.mario-title {
+  font-family: 'Press Start 2P', cursive;
+  text-shadow:
+    3px 3px 0px rgba(0,0,0,0.8),
+    -1px -1px 0px rgba(0,0,0,0.8),
+    0 0 30px rgba(250,204,21,0.5);
+}
+
+.dialog-box {
+  background: white;
+  border: 4px solid #1a1a2e;
+  border-radius: 12px;
+  box-shadow: 4px 4px 0 #1a1a2e, inset 0 0 0 2px rgba(255,255,255,0.5);
+  font-family: 'Press Start 2P', cursive;
+  font-size: 12px;
+  line-height: 2;
+  color: #1a1a2e;
+  position: relative;
+}
+
+.dialog-box::before {
+  content: '';
+  position: absolute;
+  top: -2px; left: -2px; right: -2px; bottom: -2px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(250,204,21,0.3), transparent, rgba(96,165,250,0.3));
+  z-index: -1;
+}
+
+.a-button {
+  width: 28px; height: 28px;
+  background: radial-gradient(circle at 35% 35%, #ff6b6b, #cc0000);
+  border-radius: 50%;
+  border: 3px solid #1a1a2e;
+  box-shadow: 2px 2px 0 #1a1a2e;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 10px;
+  color: white;
+  font-weight: bold;
+  text-shadow: 1px 1px 0 rgba(0,0,0,0.5);
+}
+
+.planet-green {
+  background: radial-gradient(circle at 35% 30%, #4ade80, #15803d 60%, #14532d);
+  border-radius: 50%;
+  box-shadow:
+    inset -15px -10px 30px rgba(0,0,0,0.4),
+    inset 10px 10px 20px rgba(255,255,255,0.1),
+    0 0 40px rgba(34,197,94,0.3);
+}
+
+.glow-yellow { filter: drop-shadow(0 0 15px rgba(250,204,21,0.8)); }
+.glow-blue   { filter: drop-shadow(0 0 15px rgba(96,165,250,0.8)); }
+.glow-pink   { filter: drop-shadow(0 0 15px rgba(244,114,182,0.8)); }
+
+.hud-box {
+  background: rgba(0,0,0,0.7);
+  border: 3px solid var(--mario-yellow);
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-family: 'Press Start 2P', cursive;
+  box-shadow: 0 0 20px rgba(250,204,21,0.3), inset 0 0 20px rgba(250,204,21,0.05);
+}
+
+.star-btn {
+  background: linear-gradient(135deg, #facc15, #f59e0b);
+  border: 3px solid #92400e;
+  border-radius: 8px;
+  box-shadow: 0 4px 0 #92400e, 0 0 20px rgba(250,204,21,0.4);
+  font-family: 'Press Start 2P', cursive;
+  color: #1a1a2e;
+  cursor: pointer;
+  transition: all 0.1s;
+  text-shadow: none;
+}
+
+.star-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 0 #92400e, 0 0 30px rgba(250,204,21,0.6);
+}
+
+.star-btn:active {
+  transform: translateY(2px);
+  box-shadow: 0 2px 0 #92400e;
+}
+
+.nebula-bg {
+  background:
+    radial-gradient(ellipse 80% 50% at 20% 40%, rgba(88,28,135,0.4) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 80% 60%, rgba(30,64,175,0.3) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 30% at 50% 20%, rgba(126,34,206,0.2) 0%, transparent 50%),
+    linear-gradient(180deg, #030014 0%, #1a0a3e 30%, #0d1a3a 70%, #030014 100%);
+}
+
+@keyframes floatAnimation {
+  0%, 100% { transform: translateY(0px) rotate(-2deg); }
+  50% { transform: translateY(-25px) rotate(2deg); }
+}
+
+@keyframes twinkleAnimation {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.2; transform: scale(0.7); }
+}
+
+@keyframes orbitAnimation {
+  from { transform: rotate(0deg) translateX(var(--orbit-r, 100px)) rotate(0deg); }
+  to   { transform: rotate(360deg) translateX(var(--orbit-r, 100px)) rotate(-360deg); }
+}
+
+@keyframes collectStar {
+  0%   { transform: scale(1) translateY(0); opacity: 1; }
+  50%  { transform: scale(1.8) translateY(-20px); opacity: 0.8; }
+  100% { transform: scale(0) translateY(-80px); opacity: 0; }
+}
+
+@keyframes bButtonPulse {
+  0%, 100% { box-shadow: 0 0 8px rgba(255,100,100,0.8), 2px 2px 0 #1a1a2e; }
+  50% { box-shadow: 0 0 20px rgba(255,100,100,1), 2px 2px 0 #1a1a2e; }
+}
+
+.a-button { animation: bButtonPulse 1.5s ease-in-out infinite; }

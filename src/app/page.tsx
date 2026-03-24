@@ -1,0 +1,79 @@
+'use client'
+import { useState, useEffect } from 'react'
+import IntroSlideshow from '@/components/Intro/IntroSlideshow'
+import ParallaxStars from '@/components/Hero/ParallaxStars'
+import HeroPoster from '@/components/Hero/HeroPoster'
+import HUDCountdown from '@/components/Countdown/HUDCountdown'
+import EventDetails from '@/components/DialogBubble/EventDetails'
+import RSVPSection from '@/components/PowerStars/RSVPSection'
+import SoundManager from '@/components/UI/SoundManager'
+import AudioManager from '@/components/UI/AudioManager'
+import MusicMuteButton from '@/components/UI/MusicMuteButton'
+
+function Divider() {
+  return (
+    <div style={{ display:'flex', alignItems:'center', justifyContent:'center', padding:'8px 24px' }}>
+      <div style={{ flex:1, height:'1px', background:'linear-gradient(90deg, transparent, rgba(250,204,21,0.25), transparent)' }}/>
+      <span style={{ margin:'0 12px', fontFamily:"'Press Start 2P', cursive", fontSize:'7px', color:'rgba(250,204,21,0.4)' }}>★</span>
+      <div style={{ flex:1, height:'1px', background:'linear-gradient(90deg, transparent, rgba(250,204,21,0.25), transparent)' }}/>
+    </div>
+  )
+}
+
+export default function Home() {
+  const [introComplete, setIntroComplete] = useState(false)
+  const [mainVisible, setMainVisible] = useState(false)
+  const [musicMuted, setMusicMuted] = useState(false)
+
+  const handleIntroComplete = () => {
+    setIntroComplete(true)
+    setTimeout(() => setMainVisible(true), 100)
+  }
+
+  return (
+    <main>
+      <AudioManager phase={introComplete ? 'main' : 'intro'} musicMuted={musicMuted} />
+      <SoundManager />
+      <MusicMuteButton musicMuted={musicMuted} onToggle={setMusicMuted} />
+
+      {!introComplete && <IntroSlideshow onComplete={handleIntroComplete} />}
+
+      <div style={{
+        opacity: mainVisible ? 1 : 0,
+        transition: 'opacity 0.8s ease',
+        visibility: mainVisible ? 'visible' : 'hidden',
+      }}>
+        <ParallaxStars />
+        <HeroPoster />
+        <Divider />
+        <HUDCountdown />
+        <Divider />
+        <EventDetails />
+        <Divider />
+        <RSVPSection />
+        <Divider />
+
+        <footer className="relative z-10 py-16 px-4 text-center">
+          <div style={{
+            fontFamily:"'Press Start 2P', cursive",
+            fontSize:'clamp(14px, 3.5vw, 26px)',
+            color:'#facc15',
+            textShadow:'0 0 25px rgba(250,204,21,0.7)',
+            animation:'floatAnimation 2s ease-in-out infinite',
+            lineHeight: 1.7,
+          }}>
+            ★ FELIZ CUMPLEAÑOS<br/>CARLITOS ★
+          </div>
+          <p style={{ fontFamily:"'Press Start 2P', cursive", fontSize:'clamp(8px, 2vw, 12px)', color:'rgba(255,255,255,0.35)', marginTop:'16px' }}>
+            29 · 03 · 2026
+          </p>
+          <div style={{ marginTop:'24px', fontSize:'clamp(20px,5vw,32px)' }}>
+            🎂 ⭐ 🌌 ⭐ 🎂
+          </div>
+          <p style={{ fontFamily:"'Press Start 2P', cursive", fontSize:'7px', color:'rgba(255,255,255,0.15)', marginTop:'20px' }}>
+          </p>
+        </footer>
+      </div>
+    </main>
+  )
+}

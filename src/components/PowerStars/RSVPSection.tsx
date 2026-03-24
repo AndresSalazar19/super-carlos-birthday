@@ -192,7 +192,7 @@ function RSVPForm() {
         const file = new File([blob], `Pase_VIP_${name.trim()}.png`, { type: 'image/png' });
         
         const shareData = {
-          title: '¡Voy al Super Carlos Birthday!',
+          title: '',
           text: ``, // Pie de foto vacío, como pediste
           files: [file]
         };

@@ -21,6 +21,9 @@ function Divider() {
 }
 
 export default function Home() {
+  // 👇 NUEVO ESTADO: Controla si el usuario ya hizo el primer clic
+  const [started, setStarted] = useState(false) 
+  
   const [introComplete, setIntroComplete] = useState(false)
   const [mainVisible, setMainVisible] = useState(false)
   const [musicMuted, setMusicMuted] = useState(false)
@@ -32,48 +35,68 @@ export default function Home() {
 
   return (
     <main>
-      <AudioManager phase={introComplete ? 'main' : 'intro'} musicMuted={musicMuted} />
-      <SoundManager />
-      <MusicMuteButton musicMuted={musicMuted} onToggle={setMusicMuted} />
+      {/* 👇 PANTALLA DE INICIO (Desaparece al hacer clic) */}
+      {!started && (
+        <div 
+          onClick={() => setStarted(true)}
+          className="fixed inset-0 z-[100] flex items-center justify-center cursor-pointer bg-[#000820]"
+        >
+          <div className="text-center animate-pulse">
+            <p style={{ fontFamily:"'Press Start 2P', cursive", fontSize: '12px', color: '#facc15' }}>
+              TOCA LA PANTALLA PARA EMPEZAR
+            </p>
+          </div>
+        </div>
+      )}
 
-      {!introComplete && <IntroSlideshow onComplete={handleIntroComplete} />}
+      {/* 👇 Todo tu contenido real solo se carga DESPUÉS del primer clic, 
+             garantizando que la música de AudioManager suene de inmediato */}
+      {started && (
+        <>
+          <AudioManager phase={introComplete ? 'main' : 'intro'} musicMuted={musicMuted} />
+          <SoundManager />
+          <MusicMuteButton musicMuted={musicMuted} onToggle={setMusicMuted} />
 
-      <div style={{
-        opacity: mainVisible ? 1 : 0,
-        transition: 'opacity 0.8s ease',
-        visibility: mainVisible ? 'visible' : 'hidden',
-      }}>
-        <ParallaxStars />
-        <HeroPoster />
-        <Divider />
-        <HUDCountdown />
-        <Divider />
-        <EventDetails />
-        <Divider />
-        <RSVPSection />
-        <Divider />
+          {!introComplete && <IntroSlideshow onComplete={handleIntroComplete} />}
 
-        <footer className="relative z-10 py-16 px-4 text-center">
           <div style={{
-            fontFamily:"'Press Start 2P', cursive",
-            fontSize:'clamp(14px, 3.5vw, 26px)',
-            color:'#facc15',
-            textShadow:'0 0 25px rgba(250,204,21,0.7)',
-            animation:'floatAnimation 2s ease-in-out infinite',
-            lineHeight: 1.7,
+            opacity: mainVisible ? 1 : 0,
+            transition: 'opacity 0.8s ease',
+            visibility: mainVisible ? 'visible' : 'hidden',
           }}>
-            ★ FELIZ CUMPLEAÑOS<br/>CARLITOS ★
+            <ParallaxStars />
+            <HeroPoster />
+            <Divider />
+            <HUDCountdown />
+            <Divider />
+            <EventDetails />
+            <Divider />
+            <RSVPSection />
+            <Divider />
+
+            <footer className="relative z-10 py-16 px-4 text-center">
+              <div style={{
+                fontFamily:"'Press Start 2P', cursive",
+                fontSize:'clamp(14px, 3.5vw, 26px)',
+                color:'#facc15',
+                textShadow:'0 0 25px rgba(250,204,21,0.7)',
+                animation:'floatAnimation 2s ease-in-out infinite',
+                lineHeight: 1.7,
+              }}>
+                ★ FELIZ CUMPLEAÑOS<br/>CARLITOS ★
+              </div>
+              <p style={{ fontFamily:"'Press Start 2P', cursive", fontSize:'clamp(8px, 2vw, 12px)', color:'rgba(255,255,255,0.35)', marginTop:'16px' }}>
+                29 · 03 · 2026
+              </p>
+              <div style={{ marginTop:'24px', fontSize:'clamp(20px,5vw,32px)' }}>
+                🎂 ⭐ 🌌 ⭐ 🎂
+              </div>
+              <p style={{ fontFamily:"'Press Start 2P', cursive", fontSize:'7px', color:'rgba(255,255,255,0.15)', marginTop:'20px' }}>
+              </p>
+            </footer>
           </div>
-          <p style={{ fontFamily:"'Press Start 2P', cursive", fontSize:'clamp(8px, 2vw, 12px)', color:'rgba(255,255,255,0.35)', marginTop:'16px' }}>
-            29 · 03 · 2026
-          </p>
-          <div style={{ marginTop:'24px', fontSize:'clamp(20px,5vw,32px)' }}>
-            🎂 ⭐ 🌌 ⭐ 🎂
-          </div>
-          <p style={{ fontFamily:"'Press Start 2P', cursive", fontSize:'7px', color:'rgba(255,255,255,0.15)', marginTop:'20px' }}>
-          </p>
-        </footer>
-      </div>
+        </>
+      )}
     </main>
   )
 }

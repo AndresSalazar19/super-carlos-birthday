@@ -21,12 +21,27 @@ function Divider() {
 }
 
 export default function Home() {
-  // 👇 NUEVO ESTADO: Controla si el usuario ya hizo el primer clic
   const [started, setStarted] = useState(false) 
-  
   const [introComplete, setIntroComplete] = useState(false)
   const [mainVisible, setMainVisible] = useState(false)
   const [musicMuted, setMusicMuted] = useState(false)
+
+  // 👇 NUEVO: Estado para controlar si la música está pausada por la pantalla de victoria
+  const [victoryMute, setVictoryMute] = useState(false)
+
+  // 👇 NUEVO: Escuchador de eventos (pausa la música al abrir el póster y la reanuda al cerrar)
+  useEffect(() => {
+    const handleVictoryStart = () => setVictoryMute(true)
+    const handleVictoryEnd = () => setVictoryMute(false)
+
+    window.addEventListener('victory-start', handleVictoryStart)
+    window.addEventListener('victory-end', handleVictoryEnd)
+
+    return () => {
+      window.removeEventListener('victory-start', handleVictoryStart)
+      window.removeEventListener('victory-end', handleVictoryEnd)
+    }
+  }, [])
 
   const handleIntroComplete = () => {
     setIntroComplete(true)
@@ -35,7 +50,7 @@ export default function Home() {
 
   return (
     <main>
-      {/* 👇 PANTALLA DE INICIO (Desaparece al hacer clic) */}
+      {/* PANTALLA DE INICIO (Desaparece al hacer clic) */}
       {!started && (
         <div 
           onClick={() => setStarted(true)}
@@ -49,11 +64,14 @@ export default function Home() {
         </div>
       )}
 
-      {/* 👇 Todo tu contenido real solo se carga DESPUÉS del primer clic, 
-             garantizando que la música de AudioManager suene de inmediato */}
+      {/* Todo tu contenido real solo se carga DESPUÉS del primer clic */}
       {started && (
         <>
-          <AudioManager phase={introComplete ? 'main' : 'intro'} musicMuted={musicMuted} />
+          {/* 👇 ACTUALIZADO: La música se silencia si el usuario le dio al botón de mute, O si está en la pantalla de victoria */}
+          <AudioManager 
+            phase={introComplete ? 'main' : 'intro'} 
+            musicMuted={musicMuted || victoryMute} 
+          />
           <SoundManager />
           <MusicMuteButton musicMuted={musicMuted} onToggle={setMusicMuted} />
 

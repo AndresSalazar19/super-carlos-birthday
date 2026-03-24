@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { createPortal } from 'react-dom' // 👈 AÑADE ESTA LÍNEA
 import { supabase } from '@/lib/supabase'
 import { sounds } from '@/lib/sounds'
 import { EVENT } from '@/constants/event'
@@ -102,10 +103,18 @@ function RSVPForm() {
   const [swimsuit, setSwimsuit] = useState(false)
   const [loading, setLoading] = useState(false)
   
-  // Mantenemos 'done' para el mensaje original, y agregamos 'showCelebration' para el póster
   const [done, setDone] = useState(false)
   const [showCelebration, setShowCelebration] = useState(false)
   const [error, setError] = useState('')
+
+  useEffect(() => {
+    if (showCelebration) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+    return () => { document.body.style.overflow = '' }
+  }, [showCelebration])
 
   const inputStyle: React.CSSProperties = {
     fontFamily: "'Press Start 2P', cursive", fontSize: '10px',
@@ -121,20 +130,25 @@ function RSVPForm() {
       const { error: err } = await supabase.from('rsvps').insert({ name: name.trim(), bringing_swimsuit: swimsuit })
       if (err) throw err
       
-      // ¡ÉXITO! Activamos la celebración
       setDone(true)
       setShowCelebration(true)
       
-      // Reproducir win.mp3
+      window.dispatchEvent(new Event('victory-start'))
+      
       const winSound = new Audio('/sounds/win.mp3')
       winSound.volume = 0.8
-      winSound.play().catch(e => console.log('Error reproduciendo win.mp3:', e))
+      winSound.play().catch(e => console.log('Error:', e))
 
     } catch { 
       setError('Error al guardar. Intenta de nuevo.'); 
       sounds.menuBack() 
     }
     finally { setLoading(false) }
+  }
+
+  const handleCloseCelebration = () => {
+    setShowCelebration(false)
+    window.dispatchEvent(new Event('victory-end'))
   }
 
   if (done) return (
@@ -148,54 +162,54 @@ function RSVPForm() {
         </p>
       </div>
 
-      {/* --- OVERLAY DE CELEBRACIÓN CON EL PÓSTER --- */}
-      {showCelebration && (
+      {/* 👇 CAMBIO CLAVE: Envolvemos el modal en createPortal */}
+      {showCelebration && createPortal(
         <div 
-          className="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-black/80 backdrop-blur-sm"
-          style={{ animation: 'fadeInPoster 0.5s ease-out forwards' }}
-          onClick={() => setShowCelebration(false)} 
+          className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-black"
+          style={{ animation: 'fadeInPoster 0.8s ease-out forwards' }}
         >
+          <div className="absolute inset-0 opacity-30" style={{ background: 'radial-gradient(ellipse at center, transparent 0%, #000 100%), url("/images/slides/slide1.png") center/cover' }} />
+
           <div 
-            className="relative flex flex-col items-center"
+            className="relative flex flex-col items-center z-10 w-full px-4"
             style={{ animation: 'starPop 1s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards' }}
-            onClick={(e) => e.stopPropagation()} 
           >
-            <div className="absolute inset-0 bg-yellow-400 blur-[80px] opacity-40 rounded-full animate-pulse" />
+            <div className="absolute inset-0 bg-yellow-400 blur-[100px] opacity-30 rounded-full animate-pulse" />
 
             <img
               src="/images/poster.png"
               alt="¡Invitación Desbloqueada!"
-              className="relative z-10 w-[85vw] max-w-md border-4 border-[#facc15] rounded-xl shadow-[0_0_30px_rgba(250,204,21,0.8)]"
+              className="relative z-10 w-auto h-auto max-w-full max-h-[60vh] object-contain border-4 border-[#facc15] rounded-xl shadow-[0_0_40px_rgba(250,204,21,0.6)]"
             />
 
             <h3 
-              className="relative z-10 mt-6 text-center"
-              style={{ fontFamily: "'Press Start 2P', cursive", color: '#facc15', fontSize: 'clamp(12px, 4vw, 18px)', textShadow: '4px 4px 0 #000' }}
+              className="relative z-10 mt-6 text-center animate-pulse"
+              style={{ fontFamily: "'Press Start 2P', cursive", color: '#facc15', fontSize: 'clamp(14px, 5vw, 22px)', textShadow: '0 0 10px rgba(250,204,21,0.8)' }}
             >
               ¡Invitación Desbloqueada!
             </h3>
 
             <button 
-              onClick={() => setShowCelebration(false)}
-              className="relative z-10 mt-8 px-6 py-3 bg-[#e52521] text-white rounded-full hover:scale-110 transition-transform shadow-[0_4px_0_#991b1b]"
-              style={{ fontFamily: "'Press Start 2P', cursive", fontSize: '10px' }}
+              onClick={handleCloseCelebration}
+              className="relative z-10 mt-6 px-8 py-4 bg-[#1a1a2e] text-[#facc15] border-2 border-[#facc15] rounded-full hover:scale-110 hover:bg-[#facc15] hover:text-[#1a1a2e] transition-all shadow-[0_4px_20px_rgba(250,204,21,0.3)]"
+              style={{ fontFamily: "'Press Start 2P', cursive", fontSize: '12px' }}
             >
-              CERRAR
+              CONTINUAR
             </button>
           </div>
-        </div>
+        </div>,
+        document.body // 👈 Aquí le decimos que lo inyecte directamente en la raíz de la página
       )}
 
-      {/* Estilos para el póster */}
       <style>{`
         @keyframes fadeInPoster {
           from { opacity: 0; }
           to { opacity: 1; }
         }
         @keyframes starPop {
-          0% { transform: scale(0.2) rotate(-15deg); opacity: 0; }
-          60% { transform: scale(1.1) rotate(5deg); opacity: 1; }
-          100% { transform: scale(1) rotate(0deg); opacity: 1; }
+          0% { transform: scale(0.2) translateY(50px); opacity: 0; }
+          60% { transform: scale(1.05) translateY(-10px); opacity: 1; }
+          100% { transform: scale(1) translateY(0); opacity: 1; }
         }
       `}</style>
     </>
@@ -235,7 +249,6 @@ function RSVPForm() {
 
 // ── Star counter strip ─────────────────────────────────────────────────────
 function StarCounter() {
-  // ... (Tu código de StarCounter no necesita cambios)
   const [count, setCount] = useState<number|null>(null)
   const [swimCount, setSwimCount] = useState(0)
 
@@ -284,7 +297,6 @@ function StarCounter() {
 
 // ── Main export ────────────────────────────────────────────────────────────
 export default function RSVPSection() {
-  // ... (Tu código principal de RSVPSection se mantiene igual)
   const [phase, setPhase] = useState<'intro'|'game'|'form'>('intro')
 
   return (

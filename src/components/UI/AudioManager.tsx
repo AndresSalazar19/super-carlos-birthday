@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 interface Props {
   phase: 'intro' | 'main'
@@ -8,69 +8,105 @@ interface Props {
 
 export default function AudioManager({ phase, musicMuted }: Props) {
   const audioRef = useRef<HTMLAudioElement | null>(null)
+  const [interacted, setInteracted] = useState(false)
   const phaseRef = useRef(phase)
+  const isFading = useRef(false) // Para evitar conflictos durante el crossfade
 
-  // Handle music mute changes
+  // 1. Desbloqueo de audio
   useEffect(() => {
-    if (audioRef.current) {
-      audioRef.current.volume = musicMuted ? 0 : 0.5
-    }
-  }, [musicMuted])
-
-  useEffect(() => {
-    // On first interaction, start audio
-    const startAudio = () => {
-      if (audioRef.current) return
-      const src = phase === 'intro' ? '/sounds/luma.mp3' : '/sounds/mariogalaxy.mp3'
-      const audio = new Audio(src)
-      audio.loop = true
-      audio.volume = musicMuted ? 0 : 0.5
-      audio.play().catch(() => {})
-      audioRef.current = audio
-      window.removeEventListener('click', startAudio)
-      window.removeEventListener('keydown', startAudio)
-      window.removeEventListener('touchstart', startAudio)
-    }
-
-    window.addEventListener('click', startAudio, { once: true })
-    window.addEventListener('keydown', startAudio, { once: true })
-    window.addEventListener('touchstart', startAudio, { once: true })
-
+    const unlock = () => { if (!interacted) setInteracted(true) }
+    window.addEventListener('click', unlock, { once: true })
+    window.addEventListener('touchstart', unlock, { once: true })
     return () => {
-      window.removeEventListener('click', startAudio)
-      window.removeEventListener('keydown', startAudio)
-      window.removeEventListener('touchstart', startAudio)
+      window.removeEventListener('click', unlock)
+      window.removeEventListener('touchstart', unlock)
     }
-  }, [phase])
+  }, [interacted])
 
-  // When phase changes, crossfade
+  // 2. Sincronización de PAUSA/PLAY y VOLUMEN (Capa de Control)
   useEffect(() => {
-    if (phaseRef.current === phase) return
-    phaseRef.current = phase
+    const audio = audioRef.current
+    if (!audio) return
 
-    const oldAudio = audioRef.current
-    const newSrc = phase === 'main' ? '/sounds/mariogalaxy.mp3' : '/sounds/luma.mp3'
+    if (musicMuted) {
+      audio.pause()
+      audio.volume = 0
+    } else {
+      // Solo play si el usuario ya interactuó y la pestaña está visible
+      if (interacted && !document.hidden) {
+        audio.play().catch(() => {})
+        // Si no estamos en medio de un fade, ponemos el volumen normal
+        if (!isFading.current) audio.volume = 0.55
+      }
+    }
+  }, [musicMuted, interacted])
 
-    const newAudio = new Audio(newSrc)
-    newAudio.loop = true
-    newAudio.volume = musicMuted ? 0 : 0
+  // 3. Manejo de visibilidad del navegador
+  useEffect(() => {
+    const handleVisibility = () => {
+      const audio = audioRef.current
+      if (!audio) return
+      if (document.hidden) {
+        audio.pause()
+      } else if (!musicMuted && interacted) {
+        audio.play().catch(() => {})
+      }
+    }
+    document.addEventListener('visibilitychange', handleVisibility)
+    return () => document.removeEventListener('visibilitychange', handleVisibility)
+  }, [musicMuted, interacted])
 
-    newAudio.play().then(() => {
-      // Crossfade over 1.5s
-      let vol = 0
-      const targetVol = musicMuted ? 0 : 0.55
-      const fadeIn = setInterval(() => {
-        vol = Math.min(targetVol, vol + 0.03)
-        newAudio.volume = vol
-        if (oldAudio) oldAudio.volume = Math.max(0, oldAudio.volume - 0.03)
-        if (vol >= targetVol) {
-          clearInterval(fadeIn)
-          oldAudio?.pause()
-          audioRef.current = newAudio
-        }
-      }, 50)
-    }).catch(() => {})
-  }, [phase])
+  // 4. Lógica de Carga y Crossfade
+  useEffect(() => {
+    if (!interacted) return
+
+    const getSrc = (p: 'intro' | 'main') => 
+      p === 'intro' ? '/sounds/luma.mp3' : '/sounds/mariogalaxy.mp3'
+
+    // PRIMERA CARGA
+    if (!audioRef.current) {
+      const audio = new Audio(getSrc(phase))
+      audio.loop = true
+      audio.volume = musicMuted ? 0 : 0.55
+      if (!musicMuted) audio.play().catch(() => {})
+      audioRef.current = audio
+      phaseRef.current = phase
+      return
+    }
+
+    // CAMBIO DE FASE (CROSSFADE)
+    if (phaseRef.current !== phase) {
+      isFading.current = true
+      const oldAudio = audioRef.current
+      const newAudio = new Audio(getSrc(phase))
+      newAudio.loop = true
+      newAudio.volume = 0
+      
+      newAudio.play().then(() => {
+        let vol = 0
+        const targetVol = 0.55
+        const fadeInterval = setInterval(() => {
+          vol = Math.min(targetVol, vol + 0.02)
+          
+          // Aplicamos el volumen respetando SIEMPRE el mute actual
+          newAudio.volume = musicMuted ? 0 : vol
+          if (oldAudio) oldAudio.volume = Math.max(0, oldAudio.volume - 0.02)
+
+          if (vol >= targetVol) {
+            clearInterval(fadeInterval)
+            isFading.current = false
+            oldAudio?.pause()
+            audioRef.current = newAudio
+            // Aseguramos estado final
+            if (musicMuted) newAudio.pause()
+          }
+        }, 50)
+      }).catch(() => {
+        isFading.current = false
+      })
+      phaseRef.current = phase
+    }
+  }, [phase, interacted, musicMuted])
 
   return null
 }

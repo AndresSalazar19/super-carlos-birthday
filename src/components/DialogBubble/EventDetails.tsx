@@ -8,7 +8,7 @@ const LINES = [
   { speaker: 'ROSALINA', color: '#93c5fd', text: '¡Viajero estelar! Una celebración galáctica te espera...' },
   { speaker: 'TOAD 🍄', color: '#f9a8d4', text: `📍 ${EVENT.location}` },
   { speaker: 'TOAD 🍄', color: '#f9a8d4', text: `📅 29 de marzo de 2026  ⏰ ${EVENT.time}` },
-  { speaker: 'CARLOS ★', color: '#facc15', text: 'No olvides llevar TRAJE DE BAÑO para el Power-Up acuático... ¡y prepárate para la PARRILLADA intergaláctica! 🔥', highlights: ['TRAJE DE BAÑO', 'PARRILLADA'] },
+  { speaker: 'CARLOS ★', color: '#facc15', text: 'No olvides llevar TRAJE DE BAÑO para el Power-Up acuático... ¡y prepárate para la PARRILLADA intergaláctica!', highlights: ['TRAJE DE BAÑO', 'PARRILLADA'] },
 ]
 
 function HighlightText({ text, highlights = [] }: { text: string; highlights?: string[] }) {

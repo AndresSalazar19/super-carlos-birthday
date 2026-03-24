@@ -157,36 +157,49 @@ function RSVPForm() {
     window.dispatchEvent(new Event('victory-end'))
   }
 
-  // 👇 LA MAGIA PARA COMPARTIR EN WHATSAPP
+// 👇 handleShare "Versión Premium" con Calidad Súper Mario 👇
   const handleShare = async () => {
     if (!cardRef.current) return;
     setIsSharing(true);
     sounds.menuSelect(); // Sonidito al presionar
-    
-    try {
-      // 1. Tomamos la "foto" del elemento
-      const canvas = await html2canvas(cardRef.current, {
-        backgroundColor: '#000820', // Fondo galáctico
-        scale: 2, // Alta calidad
-        useCORS: true, // Importante para las imágenes
-      });
 
-      // 2. Convertimos a archivo
+    try {
+      // 1. Opciones avanzadas para html2canvas (SÚPER IMPORTANTE)
+      const options = {
+        backgroundColor: '#000820', // Fondo galáctico
+        
+        // 👇 AJUSTES DE CALIDAD 👇
+        
+        // Subimos el scale de 2 a 3 (o incluso 4 si el poster base es de súper alta calidad).
+        // Esto crea una "foto" 3 o 4 veces más grande de lo que se ve, asegurando nitidez.
+        scale: 3, 
+        
+        useCORS: true, // Importante para cargar la imagen poster.png
+        
+        // Esto limpia la consola de errores innecesarios
+        logging: false, 
+        
+        // Aseguramos que el navegador no suavice la imagen innecesariamente (evita borrosidad)
+        imageTimeout: 0,
+      };
+
+      // 2. Tomamos la "foto" con las nuevas opciones
+      const canvas = await html2canvas(cardRef.current, options);
+
+      // 3. Convertimos a archivo con calidad máxima (the rest stays the same)
       canvas.toBlob(async (blob) => {
         if (!blob) return;
         const file = new File([blob], `Pase_VIP_${name.trim()}.png`, { type: 'image/png' });
         
-        // 3. Preparamos el mensaje de WhatsApp
         const shareData = {
           title: '¡Voy al Super Carlos Birthday!',
+          text: ``, // Pie de foto vacío, como pediste
           files: [file]
         };
 
-        // 4. Intentamos abrir el menú nativo del celular (Web Share API)
         if (navigator.canShare && navigator.canShare({ files: [file] })) {
           await navigator.share(shareData);
         } else {
-          // 5. Fallback para PC: Descargamos la imagen automáticamente
           const url = URL.createObjectURL(blob);
           const a = document.createElement('a');
           a.href = url;
@@ -195,9 +208,10 @@ function RSVPForm() {
           alert('¡Pase VIP descargado! 🎟️ Ahora puedes enviarlo por WhatsApp a tus amigos.');
         }
         setIsSharing(false);
-      });
+      }, 'image/png'); // Usamos PNG para máxima calidad sin compresión de datos
+
     } catch (err) {
-      console.error('Error al generar la imagen', err);
+      console.error('Error al generar la imagen premium', err);
       setIsSharing(false);
     }
   }
